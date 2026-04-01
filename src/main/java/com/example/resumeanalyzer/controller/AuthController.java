@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @RestController
 @RequestMapping("/api")
+@CrossOrigin(origins = "*") // ✅ allow frontend (important)
 public class AuthController {
 
     @Autowired
@@ -16,31 +17,26 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    // ✅ SIGNUP (JSON)
     @PostMapping("/signup")
-    public String signup(@RequestParam String username,
-                         @RequestParam String email,
-                         @RequestParam String password) {
+    public String signup(@RequestBody UserEntity user) {
 
-        if (userRepository.findByUsername(username).isPresent()) {
+        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             return "User already exists";
         }
 
-        UserEntity user = new UserEntity();
-        user.setUsername(username);
-        user.setEmail(email);
-        user.setPassword(passwordEncoder.encode(password));
-
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
 
         return "Signup successful";
     }
 
+    // ✅ LOGIN (JSON)
     @PostMapping("/login")
-    public String login(@RequestParam String username,
-                        @RequestParam String password) {
+    public String login(@RequestBody UserEntity user) {
 
-        return userRepository.findByUsername(username)
-                .filter(u -> passwordEncoder.matches(password, u.getPassword()))
+        return userRepository.findByUsername(user.getUsername())
+                .filter(u -> passwordEncoder.matches(user.getPassword(), u.getPassword()))
                 .map(u -> "Login success")
                 .orElse("Invalid credentials");
     }
